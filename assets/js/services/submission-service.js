@@ -2,18 +2,9 @@ import { APP_CONFIG } from "../config.js";
 
 function getSettings() {
   return {
-    endpointUrl: localStorage.getItem(APP_CONFIG.endpointStorageKey) || APP_CONFIG.defaultEndpointUrl,
-    dryRun: (localStorage.getItem(APP_CONFIG.dryRunStorageKey) ?? String(APP_CONFIG.defaultDryRun)) === "true",
+    endpointUrl: APP_CONFIG.defaultEndpointUrl,
+    dryRun: APP_CONFIG.defaultDryRun,
   };
-}
-
-export function saveSettings({ endpointUrl, dryRun }) {
-  localStorage.setItem(APP_CONFIG.endpointStorageKey, endpointUrl.trim());
-  localStorage.setItem(APP_CONFIG.dryRunStorageKey, String(Boolean(dryRun)));
-}
-
-export function loadSettings() {
-  return getSettings();
 }
 
 export async function submitInspection(payload) {

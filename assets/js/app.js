@@ -6,7 +6,7 @@ import { showToast } from "./components/toast.js";
 import { createAutocomplete } from "./components/autocomplete.js";
 import { draftService } from "./services/draft-service.js";
 import { createLookupService } from "./services/lookup-service.js";
-import { loadSettings, saveSettings, submitInspection } from "./services/submission-service.js";
+import { submitInspection } from "./services/submission-service.js";
 
 const elements = {
   lookupForm: document.querySelector("#lookup-form"),
@@ -28,11 +28,6 @@ const elements = {
   previousStep: document.querySelector("#previous-step"),
   nextStep: document.querySelector("#next-step"),
   submitForm: document.querySelector("#submit-form"),
-  openSettings: document.querySelector("#open-settings"),
-  settingsDialog: document.querySelector("#settings-dialog"),
-  settingsForm: document.querySelector("#settings-form"),
-  endpointUrl: document.querySelector("#endpoint-url"),
-  dryRun: document.querySelector("#dry-run"),
   toast: document.querySelector("#toast"),
 };
 
@@ -259,26 +254,4 @@ elements.inspectionForm.addEventListener("submit", async (event) => {
   }
 });
 
-elements.openSettings.addEventListener("click", () => {
-  const settings = loadSettings();
-  elements.endpointUrl.value = settings.endpointUrl;
-  elements.dryRun.checked = settings.dryRun;
-  elements.settingsDialog.showModal();
-});
-
-elements.settingsForm.addEventListener("submit", (event) => {
-  if (event.submitter?.id !== "save-settings") return;
-  event.preventDefault();
-  if (!elements.dryRun.checked && !elements.endpointUrl.value.trim()) {
-    elements.endpointUrl.setCustomValidity("Ingresa la URL del flujo o activa el modo de prueba.");
-    elements.endpointUrl.reportValidity();
-    return;
-  }
-  elements.endpointUrl.setCustomValidity("");
-  saveSettings({ endpointUrl: elements.endpointUrl.value, dryRun: elements.dryRun.checked });
-  elements.settingsDialog.close();
-  showToast(elements.toast, "Configuración de envío guardada en este dispositivo.");
-});
-
-elements.endpointUrl.addEventListener("input", () => elements.endpointUrl.setCustomValidity(""));
 showSection(0);

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#173f35" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; style-src-attr 'unsafe-inline'; connect-src https:; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'"
+    />
+    <meta
+      name="description"
+      content="Formulario de inspección de bóvedas eléctricas basado en InfoBase.xlsx"
+    />
+    <title>Inspección de bóvedas</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">IB</div>
+        <div>
+          <p class="eyebrow">Catastro técnico</p>
+          <h1>Inspección de bóvedas</h1>
+        </div>
+      </div>
+      <button class="button button-ghost" id="open-settings" type="button">
+        Configurar envío
+      </button>
+    </header>
+
+    <main class="page-shell">
+      <section class="intro-card" aria-labelledby="lookup-title">
+        <div>
+          <p class="eyebrow">Paso 1</p>
+          <h2 id="lookup-title">Buscar instalación</h2>
+          <p>Ingresa el número registrado en la columna B de la base.</p>
+        </div>
+        <form class="lookup-form" id="lookup-form" novalidate>
+          <label for="asset-number">Número de SED</label>
+          <div class="lookup-row">
+            <div class="autocomplete">
+              <input
+                id="asset-number"
+                name="assetNumber"
+                type="search"
+                role="combobox"
+                inputmode="text"
+                autocomplete="off"
+                maxlength="40"
+                placeholder="Escribe el número de SED"
+                aria-autocomplete="list"
+                aria-controls="sed-suggestions"
+                aria-expanded="false"
+                aria-describedby="lookup-hint suggestion-status"
+                required
+              />
+              <ul class="suggestion-list" id="sed-suggestions" role="listbox" hidden></ul>
+            </div>
+            <button class="button button-primary" type="submit">Buscar</button>
+          </div>
+          <p class="lookup-hint" id="lookup-hint">Las coincidencias mostrarán el número de SED y su alimentador.</p>
+          <p class="sr-only" id="suggestion-status" role="status" aria-live="polite"></p>
+          <p class="field-message" id="lookup-message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="inspection-shell" id="inspection-shell" hidden>
+        <div class="asset-summary">
+          <div>
+            <span>Alimentador</span>
+            <strong id="asset-feeder">—</strong>
+          </div>
+          <div>
+            <span>Número</span>
+            <strong id="asset-code">—</strong>
+          </div>
+          <div class="progress-block">
+            <div class="progress-copy">
+              <span id="progress-label">Paso 2 de 6</span>
+              <strong id="progress-section">Condiciones del entorno</strong>
+              <span id="progress-fields">0 de 24 campos completos</span>
+            </div>
+            <div
+              class="progress-track"
+              id="progress-track"
+              role="progressbar"
+              aria-labelledby="progress-label progress-section"
+              aria-valuemin="1"
+              aria-valuemax="6"
+              aria-valuenow="2"
+            >
+              <div class="progress-bar" id="progress-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <form id="inspection-form" novalidate>
+          <div id="form-sections"></div>
+          <div class="form-actions">
+            <button class="button button-ghost" id="clear-form" type="button">
+              Limpiar respuestas
+            </button>
+            <div class="step-actions">
+              <button class="button button-ghost" id="previous-step" type="button">
+                Anterior
+              </button>
+              <button class="button button-primary" id="next-step" type="button">
+                Siguiente
+              </button>
+            </div>
+            <button class="button button-primary button-submit" id="submit-form" type="submit">
+              Enviar inspección
+            </button>
+          </div>
+          <p class="privacy-note">
+            Revisa las respuestas antes de enviarlas. El endpoint se guarda únicamente en este dispositivo.
+          </p>
+        </form>
+      </section>
+    </main>
+
+    <dialog id="settings-dialog" aria-labelledby="settings-title">
+      <form method="dialog" id="settings-form">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">Integración</p>
+            <h2 id="settings-title">Power Automate</h2>
+          </div>
+          <button class="icon-button" value="cancel" aria-label="Cerrar" type="submit">×</button>
+        </div>
+        <label for="endpoint-url">URL del flujo HTTP</label>
+        <input
+          id="endpoint-url"
+          name="endpointUrl"
+          type="url"
+          autocomplete="off"
+          placeholder="https://...powerautomate.com/..."
+        />
+        <label class="check-row" for="dry-run">
+          <input id="dry-run" name="dryRun" type="checkbox" />
+          <span>Modo de prueba (no envía datos)</span>
+        </label>
+        <p class="dialog-help">
+          Para producción, pega la URL del disparador HTTP y desactiva el modo de prueba.
+        </p>
+        <div class="dialog-actions">
+          <button class="button button-ghost" value="cancel" type="submit">Cancelar</button>
+          <button class="button button-primary" id="save-settings" value="default" type="submit">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="assets/js/app.js"></script>
+  </body>
+</html>

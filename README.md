@@ -7,7 +7,7 @@ Aplicación web estática construida a partir de `InfoBase.xlsx`. Permite buscar
 1. Sirve la carpeta mediante un servidor web local (no abras `index.html` con doble clic, porque utiliza módulos JavaScript).
 2. Busca un número, por ejemplo `05008C`.
 3. Completa las secciones. El borrador se guarda automáticamente en el dispositivo.
-4. Envía la inspección. La integración con Power Automate ya está configurada; **Configurar envío** permite sustituirla si cambia el flujo.
+4. Envía la inspección. La integración con Power Automate ya está configurada en el código.
 
 Para una revisión local con las dependencias incluidas en tu equipo:
 
@@ -32,7 +32,7 @@ En Power Automate, usa un disparador **Cuando se recibe una solicitud HTTP**, co
 
 ## Configuración segura
 
-La URL del flujo está configurada en `assets/js/config.js` para que todos los dispositivos puedan enviar sin preparación manual. **Importante:** la firma queda incluida en el código publicado y debe regenerarse si el acceso al sitio no es estrictamente controlado. Una URL guardada desde **Configurar envío** sustituye localmente el valor incorporado.
+La URL del flujo está configurada en `assets/js/config.js` para que todos los dispositivos puedan enviar sin preparación manual. **Importante:** la firma queda incluida en el código publicado y debe regenerarse si el acceso al sitio no es estrictamente controlado.
 
 El catálogo de números y alimentadores sí forma parte del sitio. Si esa información es sensible, no publiques el sitio en un repositorio o GitHub Pages público; usa alojamiento con acceso restringido.
 

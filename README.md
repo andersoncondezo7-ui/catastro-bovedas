@@ -18,11 +18,11 @@ El cuerpo se envía como JSON mediante `text/plain;charset=UTF-8`. Incluye:
 - `schemaVersion`, `submissionId` y `submittedAt`.
 - `inspector.name`: usuario que inició la inspección.
 - `asset`: alimentador y número de SED.
-- `inspection`: las 31 respuestas con nombres estables.
-- `excelRow`: alimentador y SED en A–B, respuestas en C–AG e inspector en AH.
+- `inspection`: las 34 respuestas con nombres estables.
+- `excelRow`: alimentador y SED en A–B, respuestas en C–AJ e inspector en AK.
 - `source`: metadatos básicos de la aplicación.
 
-En Power Automate, el esquema y la acción de Excel deben contemplar `excelRow.A` hasta `excelRow.AH`. Las columnas C–Z conservan su asignación anterior; las preguntas nuevas usan AA–AG y el inspector usa AH.
+En Power Automate, el esquema y la acción de Excel deben contemplar `excelRow.A` hasta `excelRow.AK`. Las columnas C–AG conservan su asignación anterior; las preguntas nuevas usan AH–AJ y el inspector usa AK.
 
 ## Desarrollo local
 

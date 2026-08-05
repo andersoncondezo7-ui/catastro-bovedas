@@ -273,7 +273,7 @@ function buildPayload() {
   ALL_FIELDS.forEach((field) => {
     excelRow[field.column] = answers[field.id];
   });
-  excelRow.AH = selectedUser;
+  excelRow.AK = selectedUser;
   return {
     schemaVersion: APP_CONFIG.schemaVersion,
     submissionId: crypto.randomUUID(),

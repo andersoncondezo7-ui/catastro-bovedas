@@ -36,12 +36,12 @@ test("las sugerencias muestran coincidencias con SED y alimentador", () => {
   assert.ok(suggestions.every((row) => row.numero && row.alimentador));
 });
 
-test("el formulario mapea sin huecos las columnas C a AG", () => {
+test("el formulario mapea sin huecos las columnas C a AJ", () => {
   assert.equal(FORM_SCHEMA.length, 6);
-  assert.equal(ALL_FIELDS.length, 31);
-  const expected = Array.from({ length: 31 }, (_, index) => excelColumn(index + 3));
-  assert.deepEqual(ALL_FIELDS.map((field) => field.column), expected);
-  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 31);
+  assert.equal(ALL_FIELDS.length, 34);
+  const expected = Array.from({ length: 34 }, (_, index) => excelColumn(index + 3)).sort();
+  assert.deepEqual(ALL_FIELDS.map((field) => field.column).sort(), expected);
+  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 34);
 });
 
 test("todas las listas contienen opciones válidas y sin duplicados", () => {
@@ -66,6 +66,9 @@ test("las opciones solicitadas están presentes", () => {
   assert.deepEqual(FIELD_BY_ID.baseSoporteTermicoTimer.options, ["Buen estado", "Descolgado", "Sin soporte madera"]);
   assert.deepEqual(FIELD_BY_ID.estadoPerdidaAceite.options, ["Mancha activa", "Mancha seca", "No tiene"]);
   assert.deepEqual(FIELD_BY_ID.estadoTablero.options, ["Presenta agujeros", "Corroído", "No cuenta con pernos de anclaje", "Conforme"]);
+  assert.deepEqual(FIELD_BY_ID.ventilacionSensacionTermica.options, ["Baja", "Media", "Alta"]);
+  assert.deepEqual(FIELD_BY_ID.soporteCableMT.options, ["Si tiene", "No tiene"]);
+  assert.deepEqual(FIELD_BY_ID.estadoCableBT.options, ["Buen estado", "Pérdida de aislamiento"]);
 });
 
 test("la lista de acceso contiene exactamente los cinco inspectores", () => {

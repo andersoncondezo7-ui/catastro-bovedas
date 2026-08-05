@@ -53,7 +53,7 @@ export function renderFormSections(container, schema) {
     const fieldset = document.createElement("fieldset");
     fieldset.className = "form-section";
     const legend = document.createElement("legend");
-    legend.innerHTML = `<span>${String(index + 2).padStart(2, "0")}</span>${section.title}`;
+    legend.innerHTML = `<span>${String(index + 3).padStart(2, "0")}</span>${section.title}`;
     fieldset.append(legend);
     const description = document.createElement("p");
     description.className = "section-description";

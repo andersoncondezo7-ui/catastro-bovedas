@@ -66,6 +66,8 @@ h2 { margin-bottom: 0.45rem; font-size: clamp(1.55rem, 3vw, 2.25rem); letter-spa
   box-shadow: var(--shadow);
 }
 
+.intro-card[hidden], .inspection-shell[hidden] { display: none; }
+
 .intro-card {
   display: grid;
   grid-template-columns: minmax(0, 0.85fr) minmax(320px, 1.15fr);
@@ -75,7 +77,12 @@ h2 { margin-bottom: 0.45rem; font-size: clamp(1.55rem, 3vw, 2.25rem); letter-spa
 }
 
 .intro-card p:not(.eyebrow), .section-description { color: var(--muted); line-height: 1.55; }
-.lookup-form label, .field-card label, dialog > form > label { display: block; margin-bottom: 0.45rem; font-size: 0.86rem; font-weight: 750; }
+.lookup-form label, .login-form label, .field-card label { display: block; margin-bottom: 0.45rem; font-size: 0.86rem; font-weight: 750; }
+.login-form { display: grid; gap: 0.8rem; }
+.login-form .button { justify-self: start; min-width: 9rem; }
+.step-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.step-heading .eyebrow { margin: 0; }
+.text-button { padding: 0.25rem 0; border: 0; background: transparent; color: var(--brand); font-size: 0.82rem; font-weight: 800; text-decoration: underline; text-underline-offset: 0.2rem; }
 .lookup-row { display: grid; grid-template-columns: 1fr auto; gap: 0.65rem; }
 .autocomplete { position: relative; min-width: 0; }
 .lookup-hint { margin: 0.55rem 0 0; color: var(--muted); font-size: 0.8rem; }
@@ -221,6 +228,8 @@ dialog form { padding: 1.5rem; }
   .brand-mark { width: 2.45rem; height: 2.45rem; border-radius: 0.75rem; }
   .brand .eyebrow { display: none; }
   .lookup-row { grid-template-columns: 1fr; }
+  .login-form .button { width: 100%; }
+  .step-heading { align-items: baseline; }
   .suggestion-list { max-height: 18rem; }
   .intro-card { padding: 1.25rem; border-radius: 1.1rem; }
   .inspection-shell { border-radius: 1.1rem; overflow: visible; }

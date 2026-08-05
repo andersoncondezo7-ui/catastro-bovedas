@@ -27,10 +27,30 @@
     </header>
 
     <main class="page-shell">
-      <section class="intro-card" aria-labelledby="lookup-title">
+      <section class="intro-card login-card" id="login-screen" aria-labelledby="login-title">
         <div>
           <p class="eyebrow">Paso 1</p>
+          <h2 id="login-title">Inicio de sesión</h2>
+          <p>Identifícate antes de comenzar una inspección.</p>
+        </div>
+        <form class="login-form" id="login-form" novalidate>
+          <label for="inspector-user">Usuario</label>
+          <select id="inspector-user" name="inspectorUser" required>
+            <option value="">Seleccionar usuario…</option>
+          </select>
+          <button class="button button-primary" type="submit">Continuar</button>
+          <p class="field-message" id="login-message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="intro-card" id="lookup-screen" aria-labelledby="lookup-title" hidden>
+        <div>
+          <div class="step-heading">
+            <p class="eyebrow">Paso 2</p>
+            <button class="text-button" id="change-user" type="button">Cambiar usuario</button>
+          </div>
           <h2 id="lookup-title">Buscar instalación</h2>
+          <p>Usuario: <strong id="current-user">—</strong></p>
           <p>Ingresa el número registrado en la columna B de la base.</p>
         </div>
         <form class="lookup-form" id="lookup-form" novalidate>
@@ -74,7 +94,7 @@
           </div>
           <div class="progress-block">
             <div class="progress-copy">
-              <span id="progress-label">Paso 2 de 6</span>
+              <span id="progress-label">Paso 3 de 8</span>
               <strong id="progress-section">Condiciones del entorno</strong>
               <span id="progress-fields">0 de 24 campos completos</span>
             </div>
@@ -84,8 +104,8 @@
               role="progressbar"
               aria-labelledby="progress-label progress-section"
               aria-valuemin="1"
-              aria-valuemax="6"
-              aria-valuenow="2"
+              aria-valuemax="8"
+              aria-valuenow="3"
             >
               <div class="progress-bar" id="progress-bar"></div>
             </div>

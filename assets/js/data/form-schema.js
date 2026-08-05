@@ -40,6 +40,7 @@ export const FORM_SCHEMA = Object.freeze([
     description: "Evaluación de ventiladores y sus elementos asociados.",
     fields: [
       { id: "ventilacionPresenta", column: "O", label: "Cuenta con ventilador", type: "select", options: yesNo, required: true },
+      { id: "ventilacionSensacionTermica", column: "AH", label: "Ventilación (Sensación térmica)", type: "select", options: ["Baja", "Media", "Alta"], required: true },
       { id: "ventilacionCantidad", column: "P", label: "Cantidad", type: "number", min: 1, step: 1, required: true, dependsOn: { field: "ventilacionPresenta", equals: "Si" } },
       { id: "ventilacionOperatividad", column: "Q", label: "Operatividad", type: "select", options: ["Funciona", "No funciona"], required: true, dependsOn: { field: "ventilacionPresenta", equals: "Si" } },
       { id: "ventiladorCubierta", column: "R", label: "Ventilador cuenta con plancha de protección al motor", type: "select", options: yesNo, required: true, dependsOn: { field: "ventilacionPresenta", equals: "Si" } },
@@ -72,6 +73,8 @@ export const FORM_SCHEMA = Object.freeze([
       { id: "circuitosRotulacion", column: "AE", label: "Los circuitos cuentan con rotulación", type: "select", options: ["Si", "No", "Ilegible"], required: true },
       { id: "estadoTablero", column: "AF", label: "Estado del tablero", type: "select", options: ["Presenta agujeros", "Corroído", "No cuenta con pernos de anclaje", "Conforme"], required: true },
       { id: "estadoConectoresCodo", column: "AG", label: "Estado de conectores codo", type: "select", options: ["Hinchados", "Descarga en adaptadores", "Cable a tierra cortado"], required: true },
+      { id: "soporteCableMT", column: "AI", label: "Soporte de cable en MT", type: "select", options: ["Si tiene", "No tiene"], required: true },
+      { id: "estadoCableBT", column: "AJ", label: "Estado de cable de BT", type: "select", options: ["Buen estado", "Pérdida de aislamiento"], required: true },
     ],
   },
 ]);

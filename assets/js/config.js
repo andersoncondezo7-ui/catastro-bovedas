@@ -1,6 +1,14 @@
 export const APP_CONFIG = Object.freeze({
   appName: "Inspección de bóvedas",
-  schemaVersion: "1.0.0",
+  schemaVersion: "2.0.0",
+  userSessionKey: "catastro-bovedas:inspector",
+  inspectorUsers: Object.freeze([
+    "Rodriguez Cabriles Oscar Enrique",
+    "Anca Enciso Ronal",
+    "Rojas Lino Eliseo Jenci",
+    "Huamani Molina Dany Ulises",
+    "Quispe Massa Cesar Hipolito",
+  ]),
   requestTimeoutMs: 20000,
   draftStoragePrefix: "catastro-bovedas:draft:",
   defaultEndpointUrl: "https://default1c0051dd45964b1a9849d060735057.69.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/10/workflows/7f74e42751974431a59cf519dbf7f110/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=9_iEmzq7d01UrCTvR7nkv3GGXxHNKboe8O3UDTXRc7Y",

@@ -9,6 +9,13 @@ import { createLookupService } from "./services/lookup-service.js";
 import { submitInspection } from "./services/submission-service.js";
 
 const elements = {
+  loginScreen: document.querySelector("#login-screen"),
+  loginForm: document.querySelector("#login-form"),
+  inspectorUser: document.querySelector("#inspector-user"),
+  loginMessage: document.querySelector("#login-message"),
+  lookupScreen: document.querySelector("#lookup-screen"),
+  currentUser: document.querySelector("#current-user"),
+  changeUser: document.querySelector("#change-user"),
   lookupForm: document.querySelector("#lookup-form"),
   lookupInput: document.querySelector("#asset-number"),
   lookupMessage: document.querySelector("#lookup-message"),
@@ -31,7 +38,15 @@ const elements = {
   toast: document.querySelector("#toast"),
 };
 
+for (const user of APP_CONFIG.inspectorUsers) {
+  const option = document.createElement("option");
+  option.value = user;
+  option.textContent = user;
+  elements.inspectorUser.append(option);
+}
+const allowedUsers = new Set(APP_CONFIG.inspectorUsers);
 const lookupService = createLookupService(BASE_RECORDS);
+let selectedUser = null;
 let selectedAsset = null;
 let draftTimer = null;
 let currentSectionIndex = 0;
@@ -64,16 +79,21 @@ function formValues() {
   );
 }
 
+function draftKey(assetNumber) {
+  return `${selectedUser}::${assetNumber}`;
+}
+
 function updateProgress() {
   const controls = activeControls();
   const completed = controls.filter((control) => control.value !== "").length;
   const total = controls.length;
-  const totalSteps = formSections.length + 1;
-  const step = currentSectionIndex + 2;
+  const totalSteps = formSections.length + 2;
+  const step = currentSectionIndex + 3;
   const percentage = Math.round((step / totalSteps) * 100);
   elements.progressLabel.textContent = `Paso ${step} de ${totalSteps}`;
   elements.progressSection.textContent = FORM_SCHEMA[currentSectionIndex].title;
   elements.progressFields.textContent = `${completed} de ${total} campos completos`;
+  elements.progressTrack.setAttribute("aria-valuemax", String(totalSteps));
   elements.progressTrack.setAttribute("aria-valuenow", String(step));
   elements.progressTrack.setAttribute("aria-valuetext", `${elements.progressLabel.textContent}: ${elements.progressSection.textContent}`);
   elements.progressBar.style.width = `${percentage}%`;
@@ -109,15 +129,15 @@ function validateCurrentSection() {
 }
 
 function scheduleDraft() {
-  if (!selectedAsset) return;
+  if (!selectedUser || !selectedAsset) return;
   clearTimeout(draftTimer);
-  draftTimer = setTimeout(() => draftService.save(selectedAsset.numero, formValues()), 250);
+  draftTimer = setTimeout(() => draftService.save(draftKey(selectedAsset.numero), formValues()), 250);
 }
 
 function restoreDraft(asset) {
   elements.inspectionForm.reset();
   elements.inspectionForm.classList.remove("was-validated");
-  const draft = draftService.load(asset.numero);
+  const draft = draftService.load(draftKey(asset.numero));
   if (draft?.values) {
     Object.entries(draft.values).forEach(([id, value]) => {
       const control = elements.inspectionForm.elements[id];
@@ -130,6 +150,7 @@ function restoreDraft(asset) {
 }
 
 function selectAsset(asset) {
+  if (!selectedUser) return;
   selectedAsset = asset;
   elements.assetFeeder.textContent = asset.alimentador;
   elements.assetCode.textContent = asset.numero;
@@ -137,9 +158,57 @@ function selectAsset(asset) {
   elements.lookupMessage.textContent = `Registro encontrado: alimentador ${asset.alimentador}.`;
   elements.lookupMessage.dataset.type = "success";
   const restored = restoreDraft(asset);
-  if (restored) showToast(elements.toast, "Se recuperó el borrador guardado en este dispositivo.");
+  if (restored) showToast(elements.toast, "Se recuperó tu borrador guardado en este dispositivo.");
   elements.inspectionShell.scrollIntoView({ behavior: "smooth", block: "start" });
 }
+
+function startSession(user, { focus = true } = {}) {
+  if (!allowedUsers.has(user)) return false;
+  selectedUser = user;
+  elements.currentUser.textContent = user;
+  elements.loginScreen.hidden = true;
+  elements.lookupScreen.hidden = false;
+  elements.loginMessage.textContent = "";
+  try {
+    sessionStorage.setItem(APP_CONFIG.userSessionKey, user);
+  } catch {
+    // La sesión sigue activa aunque el navegador bloquee el almacenamiento.
+  }
+  if (focus) elements.lookupInput.focus();
+  return true;
+}
+
+function endSession() {
+  clearTimeout(draftTimer);
+  autocomplete.close();
+  selectedUser = null;
+  selectedAsset = null;
+  elements.lookupScreen.hidden = true;
+  elements.inspectionShell.hidden = true;
+  elements.lookupForm.reset();
+  elements.lookupMessage.textContent = "";
+  elements.inspectionForm.reset();
+  elements.inspectorUser.value = "";
+  elements.loginScreen.hidden = false;
+  try {
+    sessionStorage.removeItem(APP_CONFIG.userSessionKey);
+  } catch {
+    // No hay una sesión almacenada que limpiar.
+  }
+  elements.inspectorUser.focus();
+}
+
+elements.loginForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const user = elements.inspectorUser.value;
+  if (!startSession(user)) {
+    elements.loginMessage.textContent = "Selecciona un usuario válido para continuar.";
+    elements.loginMessage.dataset.type = "error";
+    elements.inspectorUser.focus();
+  }
+});
+
+elements.changeUser.addEventListener("click", endSession);
 
 elements.lookupForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -172,8 +241,8 @@ elements.lookupInput.addEventListener("input", () => {
   elements.lookupMessage.dataset.type = "";
 });
 
-elements.inspectionForm.addEventListener("input", (event) => {
-  if (event.target.name === "ventilacionPresenta") updateDependencies(elements.inspectionForm);
+elements.inspectionForm.addEventListener("input", () => {
+  updateDependencies(elements.inspectionForm);
   updateProgress();
   scheduleDraft();
 });
@@ -193,7 +262,7 @@ elements.clearForm.addEventListener("click", () => {
   elements.inspectionForm.reset();
   elements.inspectionForm.classList.remove("was-validated");
   updateDependencies(elements.inspectionForm);
-  draftService.clear(selectedAsset.numero);
+  draftService.clear(draftKey(selectedAsset.numero));
   showSection(0, { scroll: true });
   showToast(elements.toast, "Las respuestas de esta inspección fueron limpiadas.");
 });
@@ -204,10 +273,12 @@ function buildPayload() {
   ALL_FIELDS.forEach((field) => {
     excelRow[field.column] = answers[field.id];
   });
+  excelRow.AH = selectedUser;
   return {
     schemaVersion: APP_CONFIG.schemaVersion,
     submissionId: crypto.randomUUID(),
     submittedAt: new Date().toISOString(),
+    inspector: { name: selectedUser },
     asset: { ...selectedAsset },
     inspection: answers,
     excelRow,
@@ -221,7 +292,7 @@ function buildPayload() {
 
 elements.inspectionForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (!selectedAsset) return;
+  if (!selectedUser || !selectedAsset) return;
   updateDependencies(elements.inspectionForm);
   elements.inspectionForm.classList.add("was-validated");
   const firstInvalid = activeControls().find((control) => !control.checkValidity());
@@ -237,7 +308,7 @@ elements.inspectionForm.addEventListener("submit", async (event) => {
   elements.submitForm.textContent = "Enviando…";
   try {
     const result = await submitInspection(buildPayload());
-    draftService.clear(selectedAsset.numero);
+    draftService.clear(draftKey(selectedAsset.numero));
     showToast(
       elements.toast,
       result.mode === "dry-run"
@@ -255,3 +326,9 @@ elements.inspectionForm.addEventListener("submit", async (event) => {
 });
 
 showSection(0);
+try {
+  const storedUser = sessionStorage.getItem(APP_CONFIG.userSessionKey);
+  if (storedUser) startSession(storedUser, { focus: false });
+} catch {
+  // Se mantiene la pantalla de acceso si no hay almacenamiento de sesión.
+}

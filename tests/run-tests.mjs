@@ -36,20 +36,22 @@ test("las sugerencias muestran coincidencias con SED y alimentador", () => {
   assert.ok(suggestions.every((row) => row.numero && row.alimentador));
 });
 
-test("el formulario conserva C–AJ y agrega AL–BE sin ocupar AK", () => {
-  assert.equal(FORM_SCHEMA.length, 9);
-  assert.equal(ALL_FIELDS.length, 54);
+test("el formulario conserva C–AJ, usa AL–BK y no ocupa AK", () => {
+  assert.equal(FORM_SCHEMA.length, 10);
+  assert.equal(ALL_FIELDS.length, 82);
   const expected = [
     ...Array.from({ length: 34 }, (_, index) => excelColumn(index + 3)),
-    ...Array.from({ length: 20 }, (_, index) => excelColumn(index + 38)),
+    ...Array.from({ length: 26 }, (_, index) => excelColumn(index + 38)),
   ].sort();
-  assert.deepEqual(ALL_FIELDS.map((field) => field.column).sort(), expected);
-  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 54);
+  const dataFields = ALL_FIELDS.filter((field) => field.column);
+  assert.deepEqual(dataFields.map((field) => field.column).sort(), expected);
+  assert.equal(dataFields.length, 60);
+  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 82);
   assert.ok(!ALL_FIELDS.some((field) => field.column === "AK"));
 });
 
 test("todas las listas contienen opciones válidas y sin duplicados", () => {
-  for (const field of ALL_FIELDS.filter((item) => item.type === "select")) {
+  for (const field of ALL_FIELDS.filter((item) => ["select", "multiselect"].includes(item.type))) {
     assert.ok(field.options.length >= 2, `${field.id} requiere al menos dos opciones`);
     assert.equal(new Set(field.options).size, field.options.length, `${field.id} contiene opciones duplicadas`);
   }
@@ -58,6 +60,7 @@ test("todas las listas contienen opciones válidas y sin duplicados", () => {
 test("las nuevas reglas condicionales están configuradas", () => {
   assert.deepEqual(FIELD_BY_ID.ubicacion.dependsOn, { field: "riesgoInundacion", equals: "Si" });
   assert.deepEqual(FIELD_BY_ID.estadoSuciedadRejilla.dependsOn, { field: "ductosVentilacion", equals: "Si" });
+  assert.deepEqual(FIELD_BY_ID.nivelSuciedadDuctos.dependsOn, { field: "ductosVentilacion", equals: "Si" });
   assert.deepEqual(FIELD_BY_ID.estadoPerdidaAceite.dependsOn, { field: "perdidaAceite", equals: "Si" });
   assert.deepEqual(FIELD_BY_ID.componenteRuido.dependsOn, { field: "presentaRuido", equals: "Si" });
   assert.deepEqual(FIELD_BY_ID.cantidadDecibeles.dependsOn, { field: "presentaRuido", equals: "Si" });
@@ -68,10 +71,16 @@ test("las nuevas reglas condicionales están configuradas", () => {
 
 test("las opciones solicitadas están presentes", () => {
   assert.deepEqual(FIELD_BY_ID.tipoTapa.options, ["Tipo plancha", "Tipo rejilla", "Tipo mixta"]);
-  assert.deepEqual(FIELD_BY_ID.estadoConexionado.options, ["Buen estado", "Desconectado", "Descolgado", "Sin tubo corrugado", "No tiene"]);
-  assert.deepEqual(FIELD_BY_ID.baseSoporteTermicoTimer.options, ["Buen estado", "Descolgado", "Sin soporte madera"]);
+  assert.deepEqual(FIELD_BY_ID.estadoConexionado.options, ["Desconectado", "Fijado sin tubo corrugado", "Fijado con tubo corrugado", "Descolgado sin tubo corrugado", "Descolgado con tubo corrugado"]);
+  assert.deepEqual(FIELD_BY_ID.baseSoporteTermicoTimer.options, ["Con soporte de madera", "Soldado a la rejilla", "Descolgado"]);
   assert.deepEqual(FIELD_BY_ID.estadoPerdidaAceite.options, ["Mancha activa", "Mancha seca", "No tiene"]);
-  assert.deepEqual(FIELD_BY_ID.estadoTablero.options, ["Presenta agujeros", "Corroído", "No cuenta con pernos de anclaje", "Conforme"]);
+  assert.equal(FIELD_BY_ID.estadoTablero.type, "multiselect");
+  assert.equal(FIELD_BY_ID.estadoTablero.options.length, 7);
+  assert.equal(FIELD_BY_ID.estadoTablero.exclusiveOption, "Conforme");
+  assert.equal(FIELD_BY_ID.estadoConectoresCodo.type, "multiselect");
+  assert.deepEqual(FIELD_BY_ID.taponBushing.options, ["Si (normado)", "Si (simple)", "No"]);
+  assert.deepEqual(FIELD_BY_ID.transformadorCuentaTapon.options, ["Transporte (rojo)", "Servicio (verde)", "Gris con ranura", "Gris sin ranura"]);
+  assert.deepEqual(FIELD_BY_ID.incidenciaSolTapa.options, ["Mañana", "Tarde", "Mañana y tarde"]);
   assert.deepEqual(FIELD_BY_ID.ventilacionSensacionTermica.options, ["Baja", "Media", "Alta"]);
   assert.deepEqual(FIELD_BY_ID.soporteCableMT.options, ["Si tiene", "No tiene"]);
   assert.deepEqual(FIELD_BY_ID.estadoCableBT.options, ["Buen estado", "Pérdida de aislamiento"]);
@@ -84,6 +93,27 @@ test("los campos de medición muestran las unidades correctas", () => {
   for (const id of ["corrienteR", "corrienteS", "corrienteT"]) assert.equal(FIELD_BY_ID[id].unit, "A");
   for (const field of ALL_FIELDS.filter((item) => item.id.startsWith("temperatura"))) assert.equal(field.unit, "°C");
   assert.equal(FIELD_BY_ID.cantidadDecibeles.unit, "dB");
+  assert.equal(FIELD_BY_ID.profundidadSueloRejilla.unit, "m");
+  assert.equal(FIELD_BY_ID.profundidadSueloPlataforma.unit, "m");
+});
+
+test("la pantalla Fotos solicita 21 imágenes y permite una anomalía opcional", () => {
+  const photos = ALL_FIELDS.filter((field) => field.type === "file");
+  assert.equal(photos.length, 22);
+  const requiredImages = photos.reduce((sum, field) => sum + (field.required ? (field.minFiles ?? 1) : 0), 0);
+  const maximumImages = photos.reduce((sum, field) => sum + (field.maxFiles ?? 1), 0);
+  assert.equal(requiredImages, 21);
+  assert.equal(maximumImages, 22);
+  assert.equal(FIELD_BY_ID.fotoBovedaAnomalia.required, false);
+  assert.ok(["fotoCorrienteR", "fotoCorrienteS", "fotoCorrienteT"].every((id) => FIELD_BY_ID[id].required));
+  assert.ok(["fotoTermicaCodo01", "fotoTermicaCodo02"].every((id) => FIELD_BY_ID[id].required));
+  assert.ok(["fotoUltrasonidoCodo01", "fotoUltrasonidoCodo02"].every((id) => FIELD_BY_ID[id].required));
+});
+
+test("la versión y los límites de fotos corresponden a la versión 4", () => {
+  assert.equal(APP_CONFIG.schemaVersion, "4.0.0");
+  assert.equal(APP_CONFIG.photos.maxDimension, 1600);
+  assert.ok(APP_CONFIG.photos.maxPayloadBytes > APP_CONFIG.photos.maxInputBytes);
 });
 
 test("la lista de acceso contiene exactamente los cinco inspectores", () => {

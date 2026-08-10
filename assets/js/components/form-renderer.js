@@ -37,7 +37,18 @@ function createField(field) {
   control.name = field.id;
   control.dataset.column = field.column;
   control.required = Boolean(field.required);
-  wrapper.append(control);
+  if (field.unit) {
+    const inputWrapper = document.createElement("div");
+    inputWrapper.className = "input-with-unit";
+    const unit = document.createElement("span");
+    unit.className = "input-unit";
+    unit.textContent = field.unit;
+    unit.setAttribute("aria-hidden", "true");
+    inputWrapper.append(control, unit);
+    wrapper.append(inputWrapper);
+  } else {
+    wrapper.append(control);
+  }
 
   if (field.help) {
     const help = document.createElement("small");

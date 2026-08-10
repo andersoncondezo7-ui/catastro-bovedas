@@ -7,6 +7,7 @@ import { createAutocomplete } from "./components/autocomplete.js";
 import { draftService } from "./services/draft-service.js";
 import { createLookupService } from "./services/lookup-service.js";
 import { submitInspection } from "./services/submission-service.js";
+import { preparePhotos } from "./services/image-service.js";
 
 const elements = {
   loginScreen: document.querySelector("#login-screen"),
@@ -54,6 +55,8 @@ let currentSectionIndex = 0;
 renderFormSections(elements.formSections, FORM_SCHEMA);
 updateDependencies(elements.inspectionForm);
 const formSections = [...elements.formSections.querySelectorAll(".form-section")];
+const DATA_FIELDS = ALL_FIELDS.filter((field) => field.type !== "file");
+const PHOTO_FIELDS = ALL_FIELDS.filter((field) => field.type === "file");
 
 const autocomplete = createAutocomplete({
   input: elements.lookupInput,
@@ -63,20 +66,59 @@ const autocomplete = createAutocomplete({
   onSelect: selectAsset,
 });
 
-function activeControls() {
-  return ALL_FIELDS
-    .map((field) => elements.inspectionForm.elements[field.id])
-    .filter((control) => control && !control.disabled);
+function controlsForField(field) {
+  const wrapper = elements.inspectionForm.querySelector(`[data-field-id="${field.id}"]`);
+  return wrapper ? [...wrapper.querySelectorAll("input, select, textarea")] : [];
+}
+
+function fieldIsActive(field) {
+  const controls = controlsForField(field);
+  return controls.length > 0 && controls.some((control) => !control.disabled);
+}
+
+function fieldValue(field) {
+  const controls = controlsForField(field);
+  if (!controls.length || controls.every((control) => control.disabled)) return null;
+  if (field.type === "multiselect") return controls.filter((control) => control.checked).map((control) => control.value);
+  if (field.type === "file") {
+    return [...(controls[0].files || [])].map((file) => ({ name: file.name, sizeBytes: file.size, mimeType: file.type }));
+  }
+  const value = controls[0].value;
+  return value === "" ? null : field.type === "number" ? Number(value) : value;
+}
+
+function fieldIsComplete(field) {
+  const value = fieldValue(field);
+  return Array.isArray(value) ? value.length > 0 : value !== null && value !== "";
+}
+
+function activeFields() {
+  return ALL_FIELDS.filter(fieldIsActive);
+}
+
+function validateField(field) {
+  const controls = controlsForField(field);
+  const first = controls[0];
+  if (!first || !fieldIsActive(field)) return true;
+  let message = "";
+  const value = fieldValue(field);
+  if (field.required && (value === null || value === "" || (Array.isArray(value) && value.length === 0))) {
+    message = "Completa este campo para continuar.";
+  }
+  if (field.type === "file") {
+    const count = first.files?.length || 0;
+    const minimum = field.minFiles ?? (field.required ? 1 : 0);
+    const maximum = field.maxFiles ?? 1;
+    if (count < minimum) message = `Selecciona ${minimum === maximum ? "exactamente" : "al menos"} ${minimum} foto(s).`;
+    else if (count > maximum) message = `Selecciona como máximo ${maximum} foto(s).`;
+    else if ([...(first.files || [])].some((file) => file.size > APP_CONFIG.photos.maxInputBytes)) message = `Cada foto debe pesar como máximo ${APP_CONFIG.photos.maxInputMB} MB.`;
+  }
+  first.setCustomValidity(message);
+  return !message && first.checkValidity();
 }
 
 function formValues() {
-  return Object.fromEntries(
-    ALL_FIELDS.map((field) => {
-      const control = elements.inspectionForm.elements[field.id];
-      const value = control.disabled || control.value === "" ? null : field.type === "number" ? Number(control.value) : control.value;
-      return [field.id, value];
-    }),
-  );
+  return Object.fromEntries(DATA_FIELDS.map((field) => [field.id, fieldValue(field)]));
 }
 
 function draftKey(assetNumber) {
@@ -84,9 +126,9 @@ function draftKey(assetNumber) {
 }
 
 function updateProgress() {
-  const controls = activeControls();
-  const completed = controls.filter((control) => control.value !== "").length;
-  const total = controls.length;
+  const fields = activeFields();
+  const completed = fields.filter(fieldIsComplete).length;
+  const total = fields.length;
   const totalSteps = formSections.length + 2;
   const step = currentSectionIndex + 3;
   const percentage = Math.round((step / totalSteps) * 100);
@@ -114,17 +156,16 @@ function showSection(index, { scroll = false } = {}) {
   updateProgress();
   if (scroll) {
     elements.inspectionShell.scrollIntoView({ behavior: "smooth", block: "start" });
-    formSections[currentSectionIndex].querySelector("input, select")?.focus({ preventScroll: true });
+    formSections[currentSectionIndex].querySelector("input, select, textarea")?.focus({ preventScroll: true });
   }
 }
 
 function validateCurrentSection() {
-  const controls = [...formSections[currentSectionIndex].querySelectorAll("input, select, textarea")]
-    .filter((control) => !control.disabled);
-  const invalid = controls.find((control) => !control.checkValidity());
-  if (!invalid) return true;
+  const fields = FORM_SCHEMA[currentSectionIndex].fields.filter(fieldIsActive);
+  const invalidField = fields.find((field) => !validateField(field));
+  if (!invalidField) return true;
   elements.inspectionForm.classList.add("was-validated");
-  invalid.reportValidity();
+  controlsForField(invalidField)[0]?.reportValidity();
   return false;
 }
 
@@ -140,8 +181,14 @@ function restoreDraft(asset) {
   const draft = draftService.load(draftKey(asset.numero));
   if (draft?.values) {
     Object.entries(draft.values).forEach(([id, value]) => {
-      const control = elements.inspectionForm.elements[id];
-      if (control && value !== null && value !== undefined) control.value = String(value);
+      const field = DATA_FIELDS.find((item) => item.id === id);
+      if (!field || value === null || value === undefined) return;
+      const controls = controlsForField(field);
+      if (field.type === "multiselect" && Array.isArray(value)) {
+        controls.forEach((control) => { control.checked = value.includes(control.value); });
+      } else if (controls[0]) {
+        controls[0].value = String(value);
+      }
     });
   }
   updateDependencies(elements.inspectionForm);
@@ -241,7 +288,21 @@ elements.lookupInput.addEventListener("input", () => {
   elements.lookupMessage.dataset.type = "";
 });
 
-elements.inspectionForm.addEventListener("input", () => {
+function enforceExclusiveChoice(target) {
+  if (!(target instanceof HTMLInputElement) || target.type !== "checkbox" || !target.checked) return;
+  const wrapper = target.closest("[data-field-id]");
+  const field = ALL_FIELDS.find((item) => item.id === wrapper?.dataset.fieldId);
+  if (!field?.exclusiveOption) return;
+  const controls = controlsForField(field);
+  if (target.value === field.exclusiveOption) controls.forEach((control) => { if (control !== target) control.checked = false; });
+  if (target.value !== field.exclusiveOption) {
+    const exclusive = controls.find((control) => control.value === field.exclusiveOption);
+    if (exclusive) exclusive.checked = false;
+  }
+}
+
+elements.inspectionForm.addEventListener("input", (event) => {
+  enforceExclusiveChoice(event.target);
   updateDependencies(elements.inspectionForm);
   updateProgress();
   scheduleDraft();
@@ -267,13 +328,17 @@ elements.clearForm.addEventListener("click", () => {
   showToast(elements.toast, "Las respuestas de esta inspección fueron limpiadas.");
 });
 
-function buildPayload() {
+async function buildPayload() {
   const answers = formValues();
   const excelRow = { A: selectedAsset.alimentador, B: selectedAsset.numero };
-  ALL_FIELDS.forEach((field) => {
-    excelRow[field.column] = answers[field.id];
+  DATA_FIELDS.forEach((field) => {
+    const value = answers[field.id];
+    excelRow[field.column] = Array.isArray(value) ? value.join(" | ") : value;
   });
   excelRow.AK = selectedUser;
+  const photos = await preparePhotos(PHOTO_FIELDS, elements.inspectionForm, selectedAsset.numero, (current, total) => {
+    elements.submitForm.textContent = `Preparando foto ${current} de ${total}…`;
+  });
   return {
     schemaVersion: APP_CONFIG.schemaVersion,
     submissionId: crypto.randomUUID(),
@@ -281,6 +346,11 @@ function buildPayload() {
     inspector: { name: selectedUser },
     asset: { ...selectedAsset },
     inspection: answers,
+    photos,
+    photoSummary: {
+      total: photos.length,
+      totalSizeBytes: photos.reduce((sum, photo) => sum + photo.sizeBytes, 0),
+    },
     excelRow,
     source: {
       application: APP_CONFIG.appName,
@@ -295,11 +365,12 @@ elements.inspectionForm.addEventListener("submit", async (event) => {
   if (!selectedUser || !selectedAsset) return;
   updateDependencies(elements.inspectionForm);
   elements.inspectionForm.classList.add("was-validated");
-  const firstInvalid = activeControls().find((control) => !control.checkValidity());
-  if (firstInvalid) {
+  const invalidField = activeFields().find((field) => !validateField(field));
+  if (invalidField) {
+    const firstInvalid = controlsForField(invalidField)[0];
     const invalidSectionIndex = formSections.findIndex((section) => section.contains(firstInvalid));
     showSection(invalidSectionIndex, { scroll: true });
-    firstInvalid.reportValidity();
+    firstInvalid?.reportValidity();
     showToast(elements.toast, "Completa los campos obligatorios resaltados.", "error");
     return;
   }
@@ -307,7 +378,7 @@ elements.inspectionForm.addEventListener("submit", async (event) => {
   elements.submitForm.disabled = true;
   elements.submitForm.textContent = "Enviando…";
   try {
-    const result = await submitInspection(buildPayload());
+    const result = await submitInspection(await buildPayload());
     draftService.clear(draftKey(selectedAsset.numero));
     showToast(
       elements.toast,

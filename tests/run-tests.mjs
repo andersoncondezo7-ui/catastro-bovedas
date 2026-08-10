@@ -36,12 +36,16 @@ test("las sugerencias muestran coincidencias con SED y alimentador", () => {
   assert.ok(suggestions.every((row) => row.numero && row.alimentador));
 });
 
-test("el formulario mapea sin huecos las columnas C a AJ", () => {
-  assert.equal(FORM_SCHEMA.length, 6);
-  assert.equal(ALL_FIELDS.length, 34);
-  const expected = Array.from({ length: 34 }, (_, index) => excelColumn(index + 3)).sort();
+test("el formulario conserva C–AJ y agrega AL–BE sin ocupar AK", () => {
+  assert.equal(FORM_SCHEMA.length, 9);
+  assert.equal(ALL_FIELDS.length, 54);
+  const expected = [
+    ...Array.from({ length: 34 }, (_, index) => excelColumn(index + 3)),
+    ...Array.from({ length: 20 }, (_, index) => excelColumn(index + 38)),
+  ].sort();
   assert.deepEqual(ALL_FIELDS.map((field) => field.column).sort(), expected);
-  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 34);
+  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 54);
+  assert.ok(!ALL_FIELDS.some((field) => field.column === "AK"));
 });
 
 test("todas las listas contienen opciones válidas y sin duplicados", () => {
@@ -55,6 +59,8 @@ test("las nuevas reglas condicionales están configuradas", () => {
   assert.deepEqual(FIELD_BY_ID.ubicacion.dependsOn, { field: "riesgoInundacion", equals: "Si" });
   assert.deepEqual(FIELD_BY_ID.estadoSuciedadRejilla.dependsOn, { field: "ductosVentilacion", equals: "Si" });
   assert.deepEqual(FIELD_BY_ID.estadoPerdidaAceite.dependsOn, { field: "perdidaAceite", equals: "Si" });
+  assert.deepEqual(FIELD_BY_ID.componenteRuido.dependsOn, { field: "presentaRuido", equals: "Si" });
+  assert.deepEqual(FIELD_BY_ID.cantidadDecibeles.dependsOn, { field: "presentaRuido", equals: "Si" });
   for (const id of ["ventilacionCantidad", "ventilacionOperatividad", "ventiladorCubierta", "presentaBakelita", "estadoConexionado", "baseSoporteTermicoTimer"]) {
     assert.deepEqual(FIELD_BY_ID[id].dependsOn, { field: "ventilacionPresenta", equals: "Si" });
   }
@@ -69,6 +75,15 @@ test("las opciones solicitadas están presentes", () => {
   assert.deepEqual(FIELD_BY_ID.ventilacionSensacionTermica.options, ["Baja", "Media", "Alta"]);
   assert.deepEqual(FIELD_BY_ID.soporteCableMT.options, ["Si tiene", "No tiene"]);
   assert.deepEqual(FIELD_BY_ID.estadoCableBT.options, ["Buen estado", "Pérdida de aislamiento"]);
+  assert.deepEqual(FIELD_BY_ID.anomaliaLlavesCableBT.options, ["Si", "No"]);
+  assert.deepEqual(FIELD_BY_ID.presentaRuido.options, ["Si", "No"]);
+  assert.deepEqual(FIELD_BY_ID.componenteRuido.options, ["Conector codo", "Borne de B.T.", "Portafusible", "Cuba del transformador"]);
+});
+
+test("los campos de medición muestran las unidades correctas", () => {
+  for (const id of ["corrienteR", "corrienteS", "corrienteT"]) assert.equal(FIELD_BY_ID[id].unit, "A");
+  for (const field of ALL_FIELDS.filter((item) => item.id.startsWith("temperatura"))) assert.equal(field.unit, "°C");
+  assert.equal(FIELD_BY_ID.cantidadDecibeles.unit, "dB");
 });
 
 test("la lista de acceso contiene exactamente los cinco inspectores", () => {

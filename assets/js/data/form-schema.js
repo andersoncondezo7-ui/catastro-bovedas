@@ -77,6 +77,47 @@ export const FORM_SCHEMA = Object.freeze([
       { id: "estadoCableBT", column: "AJ", label: "Estado de cable de BT", type: "select", options: ["Buen estado", "Pérdida de aislamiento"], required: true },
     ],
   },
+  {
+    id: "parametrosElectricos",
+    title: "Parámetros eléctricos",
+    description: "Registro de corrientes por fase en amperios.",
+    fields: [
+      { id: "corrienteR", column: "AL", label: "Corriente R", type: "number", min: 0, step: 0.1, unit: "A", required: true },
+      { id: "corrienteS", column: "AM", label: "Corriente S", type: "number", min: 0, step: 0.1, unit: "A", required: true },
+      { id: "corrienteT", column: "AN", label: "Corriente T", type: "number", min: 0, step: 0.1, unit: "A", required: true },
+    ],
+  },
+  {
+    id: "parametrosTemperatura",
+    title: "Parámetros de temperatura",
+    description: "Mediciones de temperatura por fase y componente, expresadas en grados Celsius.",
+    fields: [
+      { id: "temperaturaCodosTerna01R", column: "AO", label: "Temperatura en codos · Terna 01 · R", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaCodosTerna01S", column: "AP", label: "Temperatura en codos · Terna 01 · S", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaCodosTerna01T", column: "AQ", label: "Temperatura en codos · Terna 01 · T", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaCodosTerna02R", column: "AR", label: "Temperatura en codos · Terna 02 · R", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaCodosTerna02S", column: "AS", label: "Temperatura en codos · Terna 02 · S", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaCodosTerna02T", column: "AT", label: "Temperatura en codos · Terna 02 · T", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaBornesBTR", column: "AU", label: "Temperatura en bornes de B.T. · R", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaBornesBTS", column: "AV", label: "Temperatura en bornes de B.T. · S", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaBornesBTT", column: "AW", label: "Temperatura en bornes de B.T. · T", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaCableComunicacionR", column: "AX", label: "Temperatura en cable de comunicación · R", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaCableComunicacionS", column: "AY", label: "Temperatura en cable de comunicación · S", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaCableComunicacionT", column: "AZ", label: "Temperatura en cable de comunicación · T", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "temperaturaCuba", column: "BA", label: "Temperatura en cuba", type: "number", step: 0.1, unit: "°C", required: true },
+      { id: "anomaliaLlavesCableBT", column: "BB", label: "Presenta anomalía en llaves o cable de salida de B.T.", type: "select", options: yesNo, required: true },
+    ],
+  },
+  {
+    id: "parametroDecibeles",
+    title: "Parámetro de decibeles",
+    description: "Evaluación de ruido y medición de su intensidad.",
+    fields: [
+      { id: "presentaRuido", column: "BC", label: "Presenta ruido", type: "select", options: yesNo, required: true },
+      { id: "componenteRuido", column: "BD", label: "¿En qué componente?", type: "select", options: ["Conector codo", "Borne de B.T.", "Portafusible", "Cuba del transformador"], required: true, dependsOn: { field: "presentaRuido", equals: "Si" } },
+      { id: "cantidadDecibeles", column: "BE", label: "Cantidad de decibeles", type: "number", min: 0, step: 0.1, unit: "dB", required: true, dependsOn: { field: "presentaRuido", equals: "Si" } },
+    ],
+  },
 ]);
 
 export const ALL_FIELDS = Object.freeze(FORM_SCHEMA.flatMap((section) => section.fields));

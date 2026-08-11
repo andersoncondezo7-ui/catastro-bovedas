@@ -10,10 +10,13 @@ import { submitInspection } from "./services/submission-service.js";
 import { preparePhotos } from "./services/image-service.js";
 
 const elements = {
+  zoneScreen: document.querySelector("#zone-screen"),
+  zoneButtons: [...document.querySelectorAll("[data-zone]")],
   loginScreen: document.querySelector("#login-screen"),
   loginForm: document.querySelector("#login-form"),
   inspectorUser: document.querySelector("#inspector-user"),
   loginMessage: document.querySelector("#login-message"),
+  changeZone: document.querySelector("#change-zone"),
   lookupScreen: document.querySelector("#lookup-screen"),
   currentUser: document.querySelector("#current-user"),
   changeUser: document.querySelector("#change-user"),
@@ -36,6 +39,8 @@ const elements = {
   previousStep: document.querySelector("#previous-step"),
   nextStep: document.querySelector("#next-step"),
   submitForm: document.querySelector("#submit-form"),
+  submitOverlay: document.querySelector("#submit-overlay"),
+  submitStatus: document.querySelector("#submit-status"),
   toast: document.querySelector("#toast"),
 };
 
@@ -47,6 +52,7 @@ for (const user of APP_CONFIG.inspectorUsers) {
 }
 const allowedUsers = new Set(APP_CONFIG.inspectorUsers);
 const lookupService = createLookupService(BASE_RECORDS);
+let selectedZone = null;
 let selectedUser = null;
 let selectedAsset = null;
 let draftTimer = null;
@@ -129,8 +135,8 @@ function updateProgress() {
   const fields = activeFields();
   const completed = fields.filter(fieldIsComplete).length;
   const total = fields.length;
-  const totalSteps = formSections.length + 2;
-  const step = currentSectionIndex + 3;
+  const totalSteps = formSections.length + 3;
+  const step = currentSectionIndex + 4;
   const percentage = Math.round((step / totalSteps) * 100);
   elements.progressLabel.textContent = `Paso ${step} de ${totalSteps}`;
   elements.progressSection.textContent = FORM_SCHEMA[currentSectionIndex].title;
@@ -209,40 +215,67 @@ function selectAsset(asset) {
   elements.inspectionShell.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function startSession(user, { focus = true } = {}) {
-  if (!allowedUsers.has(user)) return false;
-  selectedUser = user;
-  elements.currentUser.textContent = user;
-  elements.loginScreen.hidden = true;
-  elements.lookupScreen.hidden = false;
-  elements.loginMessage.textContent = "";
+function storeSession() {
   try {
-    sessionStorage.setItem(APP_CONFIG.userSessionKey, user);
+    sessionStorage.setItem(APP_CONFIG.userSessionKey, selectedUser);
+    sessionStorage.setItem(APP_CONFIG.zoneSessionKey, selectedZone);
   } catch {
     // La sesión sigue activa aunque el navegador bloquee el almacenamiento.
   }
+}
+
+function startSession(user, { focus = true } = {}) {
+  const validSouthUser = selectedZone === APP_CONFIG.zones.sur && allowedUsers.has(user);
+  const validEastAccess = selectedZone === APP_CONFIG.zones.este && user === APP_CONFIG.zones.este;
+  if (!validSouthUser && !validEastAccess) return false;
+  selectedUser = user;
+  elements.currentUser.textContent = selectedZone === APP_CONFIG.zones.este ? "Zona Este" : user;
+  elements.zoneScreen.hidden = true;
+  elements.loginScreen.hidden = true;
+  elements.lookupScreen.hidden = false;
+  elements.loginMessage.textContent = "";
+  storeSession();
   if (focus) elements.lookupInput.focus();
   return true;
+}
+
+function chooseZone(zoneKey, { focus = true } = {}) {
+  const zone = APP_CONFIG.zones[zoneKey];
+  if (!zone) return;
+  selectedZone = zone;
+  elements.zoneScreen.hidden = true;
+  if (zone === APP_CONFIG.zones.sur) {
+    elements.loginScreen.hidden = false;
+    elements.lookupScreen.hidden = true;
+    if (focus) elements.inspectorUser.focus();
+    return;
+  }
+  elements.loginScreen.hidden = true;
+  startSession(APP_CONFIG.zones.este, { focus });
 }
 
 function endSession() {
   clearTimeout(draftTimer);
   autocomplete.close();
+  selectedZone = null;
   selectedUser = null;
   selectedAsset = null;
   elements.lookupScreen.hidden = true;
   elements.inspectionShell.hidden = true;
+  elements.loginScreen.hidden = true;
+  elements.zoneScreen.hidden = false;
   elements.lookupForm.reset();
   elements.lookupMessage.textContent = "";
   elements.inspectionForm.reset();
   elements.inspectorUser.value = "";
-  elements.loginScreen.hidden = false;
+  updateDependencies(elements.inspectionForm);
   try {
     sessionStorage.removeItem(APP_CONFIG.userSessionKey);
+    sessionStorage.removeItem(APP_CONFIG.zoneSessionKey);
   } catch {
     // No hay una sesión almacenada que limpiar.
   }
-  elements.inspectorUser.focus();
+  elements.zoneButtons[0]?.focus();
 }
 
 elements.loginForm.addEventListener("submit", (event) => {
@@ -255,6 +288,8 @@ elements.loginForm.addEventListener("submit", (event) => {
   }
 });
 
+elements.zoneButtons.forEach((button) => button.addEventListener("click", () => chooseZone(button.dataset.zone)));
+elements.changeZone.addEventListener("click", endSession);
 elements.changeUser.addEventListener("click", endSession);
 
 elements.lookupForm.addEventListener("submit", (event) => {
@@ -328,6 +363,29 @@ elements.clearForm.addEventListener("click", () => {
   showToast(elements.toast, "Las respuestas de esta inspección fueron limpiadas.");
 });
 
+function setSubmitting(active, message = "Preparando la inspección y las fotografías…") {
+  elements.submitOverlay.hidden = !active;
+  elements.submitStatus.textContent = message;
+  elements.inspectionForm.inert = active;
+  elements.lookupForm.inert = active;
+  document.body.classList.toggle("is-submitting", active);
+}
+
+function resetAfterSuccessfulSubmission() {
+  const completedAssetNumber = selectedAsset?.numero;
+  if (completedAssetNumber) draftService.clear(draftKey(completedAssetNumber));
+  clearTimeout(draftTimer);
+  elements.inspectionForm.reset();
+  elements.inspectionForm.classList.remove("was-validated");
+  updateDependencies(elements.inspectionForm);
+  selectedAsset = null;
+  elements.lookupForm.reset();
+  elements.inspectionShell.hidden = true;
+  elements.lookupMessage.textContent = "Envío terminado. Busca otra SED para iniciar una nueva inspección.";
+  elements.lookupMessage.dataset.type = "success";
+  showSection(0);
+}
+
 async function buildPayload() {
   const answers = formValues();
   const excelRow = { A: selectedAsset.alimentador, B: selectedAsset.numero };
@@ -337,7 +395,9 @@ async function buildPayload() {
   });
   excelRow.AK = selectedUser;
   const photos = await preparePhotos(PHOTO_FIELDS, elements.inspectionForm, selectedAsset.numero, (current, total) => {
-    elements.submitForm.textContent = `Preparando foto ${current} de ${total}…`;
+    const message = `Preparando foto ${current} de ${total}…`;
+    elements.submitForm.textContent = message;
+    elements.submitStatus.textContent = message;
   });
   return {
     schemaVersion: APP_CONFIG.schemaVersion,
@@ -377,29 +437,38 @@ elements.inspectionForm.addEventListener("submit", async (event) => {
 
   elements.submitForm.disabled = true;
   elements.submitForm.textContent = "Enviando…";
+  setSubmitting(true);
   try {
-    const result = await submitInspection(await buildPayload());
-    draftService.clear(draftKey(selectedAsset.numero));
+    const payload = await buildPayload();
+    elements.submitStatus.textContent = "Enviando toda la información a Power Automate…";
+    const result = await submitInspection(payload);
+    resetAfterSuccessfulSubmission();
     showToast(
       elements.toast,
       result.mode === "dry-run"
-        ? "Prueba correcta: la inspección fue validada sin enviar datos."
+        ? "Prueba correcta. El formulario quedó listo para otra inspección."
         : result.confirmed
-          ? "Inspección enviada correctamente."
-          : "Solicitud enviada a Power Automate.",
+          ? "Inspección enviada correctamente. Ya puedes registrar otra SED."
+          : "Solicitud enviada a Power Automate. Ya puedes registrar otra SED.",
     );
   } catch (error) {
-    showToast(elements.toast, error.message || "No fue posible enviar la inspección.", "error");
+    showToast(elements.toast, error.message || "No fue posible enviar la inspección. Tus respuestas se conservaron.", "error");
   } finally {
+    setSubmitting(false);
     elements.submitForm.disabled = false;
     elements.submitForm.textContent = "Enviar inspección";
+    if (!selectedAsset) elements.lookupInput.focus();
   }
 });
 
 showSection(0);
 try {
   const storedUser = sessionStorage.getItem(APP_CONFIG.userSessionKey);
-  if (storedUser) startSession(storedUser, { focus: false });
+  const storedZone = sessionStorage.getItem(APP_CONFIG.zoneSessionKey);
+  if (storedUser) {
+    selectedZone = storedZone || (allowedUsers.has(storedUser) ? APP_CONFIG.zones.sur : null);
+    if (!startSession(storedUser, { focus: false })) endSession();
+  }
 } catch {
-  // Se mantiene la pantalla de acceso si no hay almacenamiento de sesión.
+  // Se mantiene la pantalla de selección de zona si no hay almacenamiento de sesión.
 }

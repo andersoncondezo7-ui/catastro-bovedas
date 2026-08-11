@@ -27,10 +27,33 @@
     </header>
 
     <main class="page-shell">
-      <section class="intro-card login-card" id="login-screen" aria-labelledby="login-title">
+      <section class="intro-card zone-card" id="zone-screen" aria-labelledby="zone-title">
         <div>
           <p class="eyebrow">Paso 1</p>
-          <h2 id="login-title">Inicio de sesión</h2>
+          <h2 id="zone-title">Selecciona tu zona</h2>
+          <p>Elige la zona responsable antes de identificar al personal que realizará la inspección.</p>
+        </div>
+        <div class="zone-options" role="group" aria-label="Zona de inspección">
+          <button class="zone-option" type="button" data-zone="sur">
+            <span class="zone-option-icon" aria-hidden="true">S</span>
+            <span><strong>Zona Sur</strong><small>Personal técnico registrado</small></span>
+            <span aria-hidden="true">→</span>
+          </button>
+          <button class="zone-option" type="button" data-zone="este">
+            <span class="zone-option-icon" aria-hidden="true">E</span>
+            <span><strong>Zona Este</strong><small>Acceso temporal por zona</small></span>
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="intro-card login-card" id="login-screen" aria-labelledby="login-title" hidden>
+        <div>
+          <div class="step-heading">
+            <p class="eyebrow">Paso 2</p>
+            <button class="text-button" id="change-zone" type="button">Cambiar zona</button>
+          </div>
+          <h2 id="login-title">Personal de Zona Sur</h2>
           <p>Identifícate antes de comenzar una inspección.</p>
         </div>
         <form class="login-form" id="login-form" novalidate>
@@ -46,7 +69,7 @@
       <section class="intro-card" id="lookup-screen" aria-labelledby="lookup-title" hidden>
         <div>
           <div class="step-heading">
-            <p class="eyebrow">Paso 2</p>
+            <p class="eyebrow">Paso 3</p>
             <button class="text-button" id="change-user" type="button">Cambiar usuario</button>
           </div>
           <h2 id="lookup-title">Buscar instalación</h2>
@@ -94,7 +117,7 @@
           </div>
           <div class="progress-block">
             <div class="progress-copy">
-              <span id="progress-label">Paso 3 de 12</span>
+              <span id="progress-label">Paso 4 de 13</span>
               <strong id="progress-section">Condiciones del entorno</strong>
               <span id="progress-fields">0 de 82 campos completos</span>
             </div>
@@ -104,8 +127,8 @@
               role="progressbar"
               aria-labelledby="progress-label progress-section"
               aria-valuemin="1"
-              aria-valuemax="12"
-              aria-valuenow="3"
+              aria-valuemax="13"
+              aria-valuenow="4"
             >
               <div class="progress-bar" id="progress-bar"></div>
             </div>
@@ -138,6 +161,16 @@
     </main>
 
     <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <div class="submit-overlay" id="submit-overlay" role="alert" aria-live="assertive" aria-busy="true" hidden>
+      <div class="submit-overlay-card">
+        <div class="submit-spinner" aria-hidden="true"></div>
+        <p class="eyebrow">Envío en proceso</p>
+        <h2>No cierres esta pantalla</h2>
+        <p id="submit-status">Preparando la inspección y las fotografías…</p>
+        <small>Espera hasta que el envío termine. Tus respuestas se conservarán si ocurre un error.</small>
+      </div>
+    </div>
 
     <script type="module" src="assets/js/app.js"></script>
   </body>

@@ -122,3 +122,19 @@ test("la lista de acceso contiene exactamente los cinco inspectores", () => {
   assert.ok(APP_CONFIG.inspectorUsers.includes("Rodriguez Cabriles Oscar Enrique"));
   assert.ok(APP_CONFIG.inspectorUsers.includes("Quispe Massa Cesar Hipolito"));
 });
+
+
+test("las zonas conservan el personal de Sur y el acceso temporal de Este", () => {
+  assert.equal(APP_CONFIG.zones.sur, "Zona Sur");
+  assert.equal(APP_CONFIG.zones.este, "Zona Este");
+  assert.equal(APP_CONFIG.inspectorUsers.length, 5);
+});
+
+test("las corrientes y temperaturas se agrupan visualmente en fases R, S y T", () => {
+  const groupedFields = ALL_FIELDS.filter((field) => field.measurementGroup);
+  const groups = [...new Set(groupedFields.map((field) => field.measurementGroup))];
+  assert.deepEqual(groups, ["corrientes", "codos-terna-01", "codos-terna-02", "bornes-bt", "cable-comunicacion"]);
+  for (const group of groups) {
+    assert.deepEqual(groupedFields.filter((field) => field.measurementGroup === group).map((field) => field.phase), ["R", "S", "T"]);
+  }
+});

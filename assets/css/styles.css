@@ -393,3 +393,52 @@ body.is-submitting { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
+/* Jerarquía de los dos bloques principales de inspección */
+.form-group-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: -0.2rem 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.8rem;
+  color: #fff;
+}
+
+.form-group-banner strong {
+  font-size: 0.98rem;
+  letter-spacing: 0.01em;
+}
+
+.form-group-banner span {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 18%);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.form-group-banner-boveda {
+  background: linear-gradient(135deg, #173f35, #2f6f5e);
+}
+
+.form-group-banner-tablero {
+  background: linear-gradient(135deg, #814b16, #c77821);
+}
+
+.form-section[data-inspection-group="tablero"] {
+  border-top: 4px solid #c77821;
+}
+
+@media (max-width: 560px) {
+  .form-group-banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .form-group-banner span {
+    align-self: flex-start;
+  }
+}

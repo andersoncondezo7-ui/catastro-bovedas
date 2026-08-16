@@ -1,6 +1,6 @@
 export const APP_CONFIG = Object.freeze({
   appName: "Inspección de bóvedas",
-  schemaVersion: "4.0.0",
+  schemaVersion: "5.2.0",
   userSessionKey: "catastro-bovedas:inspector",
   zoneSessionKey: "catastro-bovedas:zone",
   zones: Object.freeze({

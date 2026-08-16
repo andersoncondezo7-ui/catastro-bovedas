@@ -1,6 +1,6 @@
-import { APP_CONFIG } from "./config.js";
+import { APP_CONFIG } from "./config.js?v=52";
 import { BASE_RECORDS } from "./data/base-records.js";
-import { ALL_FIELDS, FORM_SCHEMA } from "./data/form-schema.js";
+import { ALL_FIELDS, FORM_SCHEMA } from "./data/form-schema.js?v=52";
 import { renderFormSections, updateDependencies } from "./components/form-renderer.js";
 import { showToast } from "./components/toast.js";
 import { createAutocomplete } from "./components/autocomplete.js";
@@ -139,7 +139,8 @@ function updateProgress() {
   const step = currentSectionIndex + 4;
   const percentage = Math.round((step / totalSteps) * 100);
   elements.progressLabel.textContent = `Paso ${step} de ${totalSteps}`;
-  elements.progressSection.textContent = FORM_SCHEMA[currentSectionIndex].title;
+  const section = FORM_SCHEMA[currentSectionIndex];
+  elements.progressSection.textContent = section.group + " · " + section.title;
   elements.progressFields.textContent = `${completed} de ${total} campos completos`;
   elements.progressTrack.setAttribute("aria-valuemax", String(totalSteps));
   elements.progressTrack.setAttribute("aria-valuenow", String(step));
@@ -386,14 +387,22 @@ function resetAfterSuccessfulSubmission() {
   showSection(0);
 }
 
+function localDateString(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return year + "-" + month + "-" + day;
+}
+
 async function buildPayload() {
+  const capturedAt = new Date();
+  const inspectionDate = localDateString(capturedAt);
   const answers = formValues();
-  const excelRow = { A: selectedAsset.alimentador, B: selectedAsset.numero };
+  const excelRow = { A: inspectionDate, B: selectedAsset.alimentador, C: selectedAsset.numero, D: selectedUser };
   DATA_FIELDS.forEach((field) => {
     const value = answers[field.id];
     excelRow[field.column] = Array.isArray(value) ? value.join(" | ") : value;
   });
-  excelRow.AK = selectedUser;
   const photos = await preparePhotos(PHOTO_FIELDS, elements.inspectionForm, selectedAsset.numero, (current, total) => {
     const message = `Preparando foto ${current} de ${total}…`;
     elements.submitForm.textContent = message;
@@ -402,7 +411,8 @@ async function buildPayload() {
   return {
     schemaVersion: APP_CONFIG.schemaVersion,
     submissionId: crypto.randomUUID(),
-    submittedAt: new Date().toISOString(),
+    submittedAt: capturedAt.toISOString(),
+    inspectionDate,
     inspector: { name: selectedUser },
     asset: { ...selectedAsset },
     inspection: answers,

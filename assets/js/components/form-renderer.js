@@ -165,6 +165,19 @@ export function renderFormSections(container, schema) {
   schema.forEach((section, index) => {
     const fieldset = document.createElement("fieldset");
     fieldset.className = "form-section";
+    fieldset.dataset.inspectionGroup = section.groupKey || "general";
+
+    const groupBanner = document.createElement("div");
+    groupBanner.className = "form-group-banner form-group-banner-" + (section.groupKey || "general");
+    const groupName = document.createElement("strong");
+    groupName.textContent = section.group || "Inspección";
+    const groupProgress = document.createElement("span");
+    const groupSections = schema.filter((item) => item.groupKey === section.groupKey);
+    const groupPosition = groupSections.findIndex((item) => item.id === section.id) + 1;
+    groupProgress.textContent = "Pantalla " + groupPosition + " de " + groupSections.length;
+    groupBanner.append(groupName, groupProgress);
+    fieldset.append(groupBanner);
+
     const legend = document.createElement("legend");
     legend.innerHTML = "<span>" + String(index + 4).padStart(2, "0") + "</span>" + section.title;
     fieldset.append(legend);
@@ -175,6 +188,7 @@ export function renderFormSections(container, schema) {
     const grid = document.createElement("div");
     grid.className = "field-grid";
     const renderedMeasurementGroups = new Set();
+    const renderedFieldGroups = new Set();
     section.fields.forEach((field) => {
       if (field.measurementGroup) {
         if (renderedMeasurementGroups.has(field.measurementGroup)) return;
@@ -183,7 +197,8 @@ export function renderFormSections(container, schema) {
         grid.append(createMeasurementGroup(groupFields, contextFor));
         return;
       }
-      if (field.group) {
+      if (field.group && !renderedFieldGroups.has(field.group)) {
+        renderedFieldGroups.add(field.group);
         const heading = document.createElement("h3");
         heading.className = "field-group-title";
         heading.textContent = field.group;

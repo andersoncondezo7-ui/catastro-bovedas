@@ -36,18 +36,14 @@ test("las sugerencias muestran coincidencias con SED y alimentador", () => {
   assert.ok(suggestions.every((row) => row.numero && row.alimentador));
 });
 
-test("el formulario conserva C–AJ, usa AL–BK y no ocupa AK", () => {
-  assert.equal(FORM_SCHEMA.length, 10);
-  assert.equal(ALL_FIELDS.length, 82);
-  const expected = [
-    ...Array.from({ length: 34 }, (_, index) => excelColumn(index + 3)),
-    ...Array.from({ length: 26 }, (_, index) => excelColumn(index + 38)),
-  ].sort();
+test("el formulario ordena las 63 respuestas consecutivamente de E a BO", () => {
+  assert.equal(FORM_SCHEMA.length, 12);
+  assert.equal(ALL_FIELDS.length, 85);
+  const expected = Array.from({ length: 63 }, (_, index) => excelColumn(index + 5));
   const dataFields = ALL_FIELDS.filter((field) => field.column);
-  assert.deepEqual(dataFields.map((field) => field.column).sort(), expected);
-  assert.equal(dataFields.length, 60);
-  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 82);
-  assert.ok(!ALL_FIELDS.some((field) => field.column === "AK"));
+  assert.deepEqual(dataFields.map((field) => field.column), expected);
+  assert.equal(dataFields.length, 63);
+  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 85);
 });
 
 test("todas las listas contienen opciones válidas y sin duplicados", () => {
@@ -110,8 +106,8 @@ test("la pantalla Fotos solicita 21 imágenes y permite una anomalía opcional",
   assert.ok(["fotoUltrasonidoCodo01", "fotoUltrasonidoCodo02"].every((id) => FIELD_BY_ID[id].required));
 });
 
-test("la versión y los límites de fotos corresponden a la versión 4", () => {
-  assert.equal(APP_CONFIG.schemaVersion, "4.0.0");
+test("la versión y los límites de fotos corresponden a la versión 5", () => {
+  assert.equal(APP_CONFIG.schemaVersion, "5.0.0");
   assert.equal(APP_CONFIG.photos.maxDimension, 1600);
   assert.ok(APP_CONFIG.photos.maxPayloadBytes > APP_CONFIG.photos.maxInputBytes);
 });
@@ -137,4 +133,32 @@ test("las corrientes y temperaturas se agrupan visualmente en fases R, S y T", (
   for (const group of groups) {
     assert.deepEqual(groupedFields.filter((field) => field.measurementGroup === group).map((field) => field.phase), ["R", "S", "T"]);
   }
+});
+
+
+test("las pantallas se dividen en Transformador + bóveda y Tablero", () => {
+  assert.deepEqual([...new Set(FORM_SCHEMA.map((section) => section.group))], ["Transformador + bóveda", "Tablero"]);
+  assert.equal(FORM_SCHEMA.filter((section) => section.groupKey === "boveda").length, 9);
+  assert.equal(FORM_SCHEMA.filter((section) => section.groupKey === "tablero").length, 3);
+  assert.deepEqual(FORM_SCHEMA.filter((section) => section.groupKey === "tablero").map((section) => section.id), ["tablero", "parametrosElectricosTablero", "fotosTablero"]);
+});
+
+test("el tablero incorpora tipo, sección y estado del cable de comunicación", () => {
+  assert.deepEqual(FIELD_BY_ID.tipoCableComunicacion.options, ["NA2XY", "N2XY", "NYY", "NAYY"]);
+  assert.equal(FIELD_BY_ID.seccionCableComunicacion.type, "number");
+  assert.equal(FIELD_BY_ID.seccionCableComunicacion.unit, "mm²");
+  assert.equal(FIELD_BY_ID.estadoCableComunicacion.type, "multiselect");
+  assert.equal(FIELD_BY_ID.estadoCableComunicacion.options.length, 7);
+  assert.equal(FIELD_BY_ID.estadoTablero.column, "BE");
+  assert.equal(FIELD_BY_ID.tipoCableComunicacion.column, "BF");
+  assert.equal(FIELD_BY_ID.seccionCableComunicacion.column, "BG");
+  assert.equal(FIELD_BY_ID.estadoCableComunicacion.column, "BH");
+  assert.equal(FIELD_BY_ID.corrienteR.column, "BI");
+  assert.equal(FIELD_BY_ID.anomaliaLlavesCableBT.column, "BO");
+});
+
+test("las fotos quedan distribuidas entre bóveda y tablero", () => {
+  assert.equal(FORM_SCHEMA.find((section) => section.id === "fotosBoveda").fields.length, 15);
+  assert.equal(FORM_SCHEMA.find((section) => section.id === "fotosTablero").fields.length, 7);
+  assert.ok(ALL_FIELDS.filter((field) => field.type === "file").every((field) => field.group));
 });

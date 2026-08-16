@@ -19,12 +19,12 @@ El cuerpo se envía como JSON mediante `text/plain;charset=UTF-8`. Incluye:
 - `inspector.name`: usuario que inició la inspección.
 - `asset`: alimentador y número de SED.
 - `inspection`: las 60 respuestas técnicas; las selecciones múltiples se conservan como listas.
-- `excelRow`: alimentador y SED en A–B, respuestas en C–AJ y AL–BK, e inspector en AK.
+- `excelRow`: fecha en A, alimentador y SED en B–C, inspector en D y las 63 respuestas en E–BO siguiendo exactamente el orden de las pantallas.
 - `photos`: 21 fotografías obligatorias y una evidencia opcional, comprimidas como JPEG y codificadas en Base64.
 - `photoSummary`: cantidad de fotos y tamaño total comprimido.
 - `source`: metadatos básicos de la aplicación.
 
-En Power Automate, el esquema y la acción de Excel deben contemplar `excelRow.A` hasta `excelRow.BK`. Las columnas A–BE conservan su asignación anterior; las nuevas respuestas usan BF–BK y el inspector permanece en AK. La siguiente columna libre es BL.
+En Power Automate, el esquema y la acción de Excel deben contemplar `excelRow.A` hasta `excelRow.BO`. Los datos generales ocupan A–D y las respuestas se guardan secuencialmente en E–BO según el orden de las pantallas.
 
 Las fotos deben guardarse en SharePoint, OneDrive u otro repositorio usando `photos[].contentBase64`; no se almacenan dentro de celdas de Excel.
 

@@ -148,7 +148,9 @@ test("el tablero incorpora tipo, sección y estado del cable de comunicación", 
   assert.equal(FIELD_BY_ID.seccionCableComunicacion.type, "number");
   assert.equal(FIELD_BY_ID.seccionCableComunicacion.unit, "mm²");
   assert.equal(FIELD_BY_ID.estadoCableComunicacion.type, "multiselect");
-  assert.equal(FIELD_BY_ID.estadoCableComunicacion.options.length, 7);
+  assert.equal(FIELD_BY_ID.estadoCableComunicacion.options.length, 8);
+  assert.equal(FIELD_BY_ID.estadoCableComunicacion.exclusiveOption, "Conforme");
+  assert.ok(FIELD_BY_ID.estadoCableComunicacion.options.includes("Conforme"));
   assert.equal(FIELD_BY_ID.estadoTablero.column, "BE");
   assert.equal(FIELD_BY_ID.tipoCableComunicacion.column, "BF");
   assert.equal(FIELD_BY_ID.seccionCableComunicacion.column, "BG");

@@ -1,6 +1,6 @@
-import { APP_CONFIG } from "./config.js?v=52";
+import { APP_CONFIG } from "./config.js?v=53";
 import { BASE_RECORDS } from "./data/base-records.js";
-import { ALL_FIELDS, FORM_SCHEMA } from "./data/form-schema.js?v=52";
+import { ALL_FIELDS, FORM_SCHEMA } from "./data/form-schema.js?v=53";
 import { renderFormSections, updateDependencies } from "./components/form-renderer.js";
 import { showToast } from "./components/toast.js";
 import { createAutocomplete } from "./components/autocomplete.js";

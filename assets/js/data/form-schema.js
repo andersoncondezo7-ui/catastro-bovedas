@@ -917,6 +917,7 @@ const BASE_FORM_SCHEMA = Object.freeze([
         "column": "BO",
         "label": "Estado de cable de comunicación",
         "type": "multiselect",
+        "exclusiveOption": "Conforme",
         "options": [
           "Cambio de coloración del PVC",
           "Cambio de coloración del metal",
@@ -924,7 +925,8 @@ const BASE_FORM_SCHEMA = Object.freeze([
           "Derretimiento de la cera del conector terminal.",
           "Cubierta de PVC encogida por calentamiento",
           "Cubierta de PVC abierta por calentamiento",
-          "Cubierta de termocontraíble abierta"
+          "Cubierta de termocontraíble abierta",
+          "Conforme"
         ],
         "required": true
       }

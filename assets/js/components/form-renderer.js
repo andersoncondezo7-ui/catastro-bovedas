@@ -77,6 +77,11 @@ function createField(field, context = {}) {
       control.append(createOption(""));
       control.options[0].textContent = "Seleccionar…";
       for (const value of field.options) control.append(createOption(value));
+    } else if (field.type === "textarea") {
+      control = document.createElement("textarea");
+      if (field.rows) control.rows = Number(field.rows);
+      if (field.maxlength) control.maxLength = Number(field.maxlength);
+      if (field.placeholder) control.placeholder = field.placeholder;
     } else {
       control = document.createElement("input");
       control.type = field.type;
@@ -86,7 +91,6 @@ function createField(field, context = {}) {
       if (field.type === "file") {
         control.accept = field.accept || "image/*";
         control.multiple = Boolean(field.multiple);
-        if (field.capture) control.setAttribute("capture", field.capture);
       }
     }
 

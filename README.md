@@ -6,7 +6,7 @@ Aplicación web estática construida a partir de `InfoBase.xlsx`. Permite identi
 
 1. Selecciona uno de los cinco usuarios autorizados y pulsa **Continuar**.
 2. Busca un número de SED, por ejemplo `05008C`.
-3. Completa las diez secciones. Las preguntas dependientes aparecen únicamente cuando corresponde.
+3. Completa las secciones. Las preguntas dependientes aparecen únicamente cuando corresponde. La última pantalla ("Comentarios generales") permite anotar de forma opcional cualquier anomalía no contemplada.
 4. Revisa y envía la inspección. La integración con Power Automate ya está configurada en el código.
 
 El borrador de las respuestas se guarda por usuario y SED en el dispositivo. Por seguridad y espacio, las fotografías deben volver a seleccionarse si se recarga la página.
@@ -18,13 +18,13 @@ El cuerpo se envía como JSON mediante `text/plain;charset=UTF-8`. Incluye:
 - `schemaVersion`, `submissionId` y `submittedAt`.
 - `inspector.name`: usuario que inició la inspección.
 - `asset`: alimentador y número de SED.
-- `inspection`: las 60 respuestas técnicas; las selecciones múltiples se conservan como listas.
-- `excelRow`: fecha en A, alimentador y SED en B–C, inspector en D y las 63 respuestas en E–BO siguiendo exactamente el orden de las pantallas.
+- `inspection`: las respuestas técnicas y el comentario general; las selecciones múltiples se conservan como listas.
+- `excelRow`: fecha en A, alimentador y SED en B–C, inspector en D y las 64 respuestas en E–BP siguiendo exactamente el orden de las pantallas. La columna BP contiene el comentario general opcional.
 - `photos`: 21 fotografías obligatorias y una evidencia opcional, comprimidas como JPEG y codificadas en Base64.
 - `photoSummary`: cantidad de fotos y tamaño total comprimido.
 - `source`: metadatos básicos de la aplicación.
 
-En Power Automate, el esquema y la acción de Excel deben contemplar `excelRow.A` hasta `excelRow.BO`. Los datos generales ocupan A–D y las respuestas se guardan secuencialmente en E–BO según el orden de las pantallas.
+En Power Automate, el esquema y la acción de Excel deben contemplar `excelRow.A` hasta `excelRow.BP`. Los datos generales ocupan A–D y las respuestas se guardan secuencialmente en E–BP según el orden de las pantallas.
 
 Las fotos deben guardarse en SharePoint, OneDrive u otro repositorio usando `photos[].contentBase64`; no se almacenan dentro de celdas de Excel.
 
@@ -36,7 +36,7 @@ Las fotos deben guardarse en SharePoint, OneDrive u otro repositorio usando `pho
 
 ## Evidencia fotográfica
 
-La última pantalla contiene controles separados para tomar cada foto desde el celular: panorámicas, tablero, bóveda, corrientes, imágenes térmicas y ultrasonido. La aplicación reduce cada imagen a un máximo de 1600 px y controla el tamaño total antes de enviarla.
+Las pantallas de fotos contienen controles separados para cada imagen: panorámicas, tablero, bóveda, corrientes, imágenes térmicas y ultrasonido. Cada control permite tomar la foto con la cámara o elegirla desde la galería del celular, de modo que si la aplicación se cierra no es necesario repetir las fotos ya capturadas. La aplicación reduce cada imagen a un máximo de 1600 px y controla el tamaño total antes de enviarla.
 
 ## Desarrollo local
 

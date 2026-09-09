@@ -36,14 +36,14 @@ test("las sugerencias muestran coincidencias con SED y alimentador", () => {
   assert.ok(suggestions.every((row) => row.numero && row.alimentador));
 });
 
-test("el formulario ordena las 63 respuestas consecutivamente de E a BO", () => {
-  assert.equal(FORM_SCHEMA.length, 12);
-  assert.equal(ALL_FIELDS.length, 85);
-  const expected = Array.from({ length: 63 }, (_, index) => excelColumn(index + 5));
+test("el formulario ordena las 64 respuestas consecutivamente de E a BP", () => {
+  assert.equal(FORM_SCHEMA.length, 13);
+  assert.equal(ALL_FIELDS.length, 86);
+  const expected = Array.from({ length: 64 }, (_, index) => excelColumn(index + 5));
   const dataFields = ALL_FIELDS.filter((field) => field.column);
   assert.deepEqual(dataFields.map((field) => field.column), expected);
-  assert.equal(dataFields.length, 63);
-  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 85);
+  assert.equal(dataFields.length, 64);
+  assert.equal(new Set(ALL_FIELDS.map((field) => field.id)).size, 86);
 });
 
 test("todas las listas contienen opciones válidas y sin duplicados", () => {
@@ -74,6 +74,8 @@ test("las opciones solicitadas están presentes", () => {
   assert.equal(FIELD_BY_ID.estadoTablero.options.length, 7);
   assert.equal(FIELD_BY_ID.estadoTablero.exclusiveOption, "Conforme");
   assert.equal(FIELD_BY_ID.estadoConectoresCodo.type, "multiselect");
+  assert.equal(FIELD_BY_ID.estadoConectoresCodo.exclusiveOption, "Conforme");
+  assert.ok(FIELD_BY_ID.estadoConectoresCodo.options.includes("Conforme"));
   assert.deepEqual(FIELD_BY_ID.taponBushing.options, ["Si (normado)", "Si (simple)", "No"]);
   assert.deepEqual(FIELD_BY_ID.transformadorCuentaTapon.options, ["Transporte (rojo)", "Servicio (verde)", "Gris con ranura", "Gris sin ranura"]);
   assert.deepEqual(FIELD_BY_ID.incidenciaSolTapa.options, ["Mañana", "Tarde", "Mañana y tarde"]);
@@ -106,8 +108,8 @@ test("la pantalla Fotos solicita 21 imágenes y permite una anomalía opcional",
   assert.ok(["fotoUltrasonidoCodo01", "fotoUltrasonidoCodo02"].every((id) => FIELD_BY_ID[id].required));
 });
 
-test("la versión y los límites de fotos corresponden a la versión 5.2", () => {
-  assert.equal(APP_CONFIG.schemaVersion, "5.2.0");
+test("la versión y los límites de fotos corresponden a la versión 5.3", () => {
+  assert.equal(APP_CONFIG.schemaVersion, "5.3.0");
   assert.equal(APP_CONFIG.photos.maxDimension, 1600);
   assert.ok(APP_CONFIG.photos.maxPayloadBytes > APP_CONFIG.photos.maxInputBytes);
 });
@@ -136,11 +138,21 @@ test("las corrientes y temperaturas se agrupan visualmente en fases R, S y T", (
 });
 
 
-test("las pantallas se dividen en Transformador + bóveda y Tablero", () => {
-  assert.deepEqual([...new Set(FORM_SCHEMA.map((section) => section.group))], ["Transformador + bóveda", "Tablero"]);
+test("las pantallas se dividen en Transformador + bóveda, Tablero y Generales", () => {
+  assert.deepEqual([...new Set(FORM_SCHEMA.map((section) => section.group))], ["Transformador + bóveda", "Tablero", "Generales"]);
   assert.equal(FORM_SCHEMA.filter((section) => section.groupKey === "boveda").length, 9);
   assert.equal(FORM_SCHEMA.filter((section) => section.groupKey === "tablero").length, 3);
+  assert.equal(FORM_SCHEMA.filter((section) => section.groupKey === "generales").length, 1);
   assert.deepEqual(FORM_SCHEMA.filter((section) => section.groupKey === "tablero").map((section) => section.id), ["tablero", "parametrosElectricosTablero", "fotosTablero"]);
+});
+
+test("los comentarios generales son un campo de texto libre opcional al final", () => {
+  const last = FORM_SCHEMA[FORM_SCHEMA.length - 1];
+  assert.equal(last.id, "comentariosGenerales");
+  assert.equal(last.groupKey, "generales");
+  assert.equal(FIELD_BY_ID.comentariosGenerales.type, "textarea");
+  assert.equal(FIELD_BY_ID.comentariosGenerales.required, false);
+  assert.equal(FIELD_BY_ID.comentariosGenerales.column, "BP");
 });
 
 test("el tablero incorpora tipo, sección y estado del cable de comunicación", () => {

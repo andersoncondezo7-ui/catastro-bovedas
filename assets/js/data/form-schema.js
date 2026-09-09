@@ -512,11 +512,13 @@ const BASE_FORM_SCHEMA = Object.freeze([
         "column": "AG",
         "label": "Estado de conectores codo",
         "type": "multiselect",
+        "exclusiveOption": "Conforme",
         "options": [
           "Hinchado",
           "Descarga en adaptador de tierra",
           "Cable de tierra seccionado",
-          "Sin tapón en el punto de inducción"
+          "Sin tapón en el punto de inducción",
+          "Conforme"
         ],
         "required": true
       },
@@ -917,7 +919,6 @@ const BASE_FORM_SCHEMA = Object.freeze([
         "column": "BO",
         "label": "Estado de cable de comunicación",
         "type": "multiselect",
-        "exclusiveOption": "Conforme",
         "options": [
           "Cambio de coloración del PVC",
           "Cambio de coloración del metal",
@@ -925,8 +926,7 @@ const BASE_FORM_SCHEMA = Object.freeze([
           "Derretimiento de la cera del conector terminal.",
           "Cubierta de PVC encogida por calentamiento",
           "Cubierta de PVC abierta por calentamiento",
-          "Cubierta de termocontraíble abierta",
-          "Conforme"
+          "Cubierta de termocontraíble abierta"
         ],
         "required": true
       }
@@ -1096,6 +1096,25 @@ const BASE_FORM_SCHEMA = Object.freeze([
         "capture": "environment",
         "required": true,
         "group": "Imagen térmica del cable de comunicación"
+      }
+    ]
+  },
+  {
+    "id": "comentariosGenerales",
+    "group": "Generales",
+    "groupKey": "generales",
+    "title": "Comentarios generales",
+    "description": "Espacio opcional para registrar anomalías u observaciones que no estén contempladas en las preguntas anteriores.",
+    "fields": [
+      {
+        "id": "comentariosGenerales",
+        "column": "BP",
+        "label": "Comentarios / anomalías adicionales (opcional)",
+        "type": "textarea",
+        "rows": 5,
+        "maxlength": 2000,
+        "placeholder": "Describe cualquier anomalía u observación adicional…",
+        "required": false
       }
     ]
   }

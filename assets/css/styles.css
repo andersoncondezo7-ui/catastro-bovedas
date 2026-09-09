@@ -127,7 +127,7 @@ h2 { margin-bottom: 0.45rem; font-size: clamp(1.55rem, 3vw, 2.25rem); letter-spa
   border: 0;
 }
 
-input, select {
+input, select, textarea {
   width: 100%;
   min-height: 3.2rem;
   padding: 0.75rem 0.85rem;
@@ -139,8 +139,15 @@ input, select {
   transition: border-color 120ms ease, box-shadow 120ms ease;
 }
 
-input:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(23, 63, 53, 0.12); }
-.was-validated input:invalid, .was-validated select:invalid { border-color: rgba(169, 58, 51, 0.7); }
+textarea {
+  min-height: 6.5rem;
+  font: inherit;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+input:focus, select:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(23, 63, 53, 0.12); }
+.was-validated input:invalid, .was-validated select:invalid, .was-validated textarea:invalid { border-color: rgba(169, 58, 51, 0.7); }
 .input-with-unit { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
 .input-with-unit input { border-radius: 0.8rem 0 0 0.8rem; }
 .input-unit {
@@ -428,8 +435,16 @@ body.is-submitting { overflow: hidden; }
   background: linear-gradient(135deg, #814b16, #c77821);
 }
 
+.form-group-banner-generales {
+  background: linear-gradient(135deg, #334155, #64748b);
+}
+
 .form-section[data-inspection-group="tablero"] {
   border-top: 4px solid #c77821;
+}
+
+.form-section[data-inspection-group="generales"] {
+  border-top: 4px solid #64748b;
 }
 
 @media (max-width: 560px) {
